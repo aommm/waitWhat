@@ -13,10 +13,11 @@
 // TODO:
 // Prettify overview list. Show CSS transition info, added/removed etc
 
+// "Generate code for checked items", filter out only the visible ones first
+
 // Restore console.log
 delete console.log;
 
-console.log('asdf');
 
 // ----------------------------------------------------------------------------
 // 'Observations' data structure
@@ -69,12 +70,14 @@ Observations.prototype.addChildList = function (target, type, nodes) {
 // UI
 
 function startWaitWhat() {
-  var HelloMessage = React.createClass({displayName: "HelloMessage",
-    getInitialState: function() {
+
+  var MainView = React.createClass({displayName: "MainView",
+    getInitialState: function () {
       return {
-        listening: false,
         observer:  null,
         observations:  null,
+        expanded: false,
+        listening: false,
         filters: {
           childList: true,
           attributes: true,
@@ -82,8 +85,8 @@ function startWaitWhat() {
         }
       }
     },
-
-    render: function() {
+    render: function () {
+      console.log('rendering MainView');
       var style = {
         position: 'absolute',
         top: '20px',
@@ -91,10 +94,70 @@ function startWaitWhat() {
         'zIndex': 9000000,
         background: 'white',
         maxHeight: '100%',
+        maxWidth: '80%',
         overflow: 'scroll'
       }
+      if (this.state.expanded) {
+        var expandContract = React.createElement("button", {onClick: this.contract}, "-")
+        var content = (
+          React.createElement(ListView, {
+            observer: this.state.observer, 
+            observations: this.state.observations, 
+            filters: this.state.filters, 
+            listening: this.state.listening, 
+            setObservations: this.setObservations.bind(this), 
+            setObserver: this.setObserver.bind(this), 
+            setListening: this.setListening.bind(this), 
+            setFilters: this.setFilters.bind(this), 
+            rootEl: this.props.rootEl}
+            )
+        )
+            /*
+            onExpand={this.expand.bind(this)}
+            onContract={this.contract.bind(this)}
+            */
+      } else {
+        var expandContract = React.createElement("button", {onClick: this.expand}, "+")
+        var content = "";
+      }
+      return (
+        React.createElement("div", {style: style}, 
+           expandContract, 
+           content 
+        )
+      )
+    },
+    expand: function () {
+      this.setState({expanded: true});
+    },
+    contract: function () {
+      this.setState({expanded: false});
+    },
+    setObservations: function (observations) {
+      this.setState({observations: observations});
+    },
+    setObserver: function (observer) {
+      this.setState({observer: observer});
+    },
+    setListening: function (listening) {
+      this.setState({listening: listening});
+    },
+    setFilters: function (filters) {
+      this.setState({filters: filters});
+    }
 
-      if (this.state.listening) {
+
+
+  });
+
+  var ListView = React.createClass({displayName: "ListView",
+    getInitialState: function() {
+      return {}
+    },
+
+    render: function() {
+
+      if (this.props.listening) {
         var startStopButton = (React.createElement("button", {onClick: this.stopListening}, "Stop listening"));
       } else {
         var startStopButton = (React.createElement("button", {onClick: this.startListening}, "Start listening"));
@@ -102,9 +165,9 @@ function startWaitWhat() {
 
       var filterDiv = (
         React.createElement("div", null, 
-          React.createElement("label", null, React.createElement("input", {type: "checkbox", checked: this.state.filters.childList, onChange: this.checkboxChanged.bind(this, 'childList')}), " childList (Add/remove from DOM)", React.createElement("br", null)), React.createElement("br", null), 
-          React.createElement("label", null, React.createElement("input", {type: "checkbox", checked: this.state.filters.attributes, onChange: this.checkboxChanged.bind(this, 'attributes')}), " attributes ", React.createElement("br", null)), React.createElement("br", null), 
-          React.createElement("label", null, React.createElement("input", {type: "checkbox", checked: this.state.filters.showCssTransitions, onChange: this.checkboxChanged.bind(this, 'showCssTransitions')}), " Show CSS transitions ", React.createElement("br", null))
+          React.createElement("label", null, React.createElement("input", {type: "checkbox", checked: this.props.filters.childList, onChange: this.checkboxChanged.bind(this, 'childList')}), " childList (Add/remove from DOM)", React.createElement("br", null)), React.createElement("br", null), 
+          React.createElement("label", null, React.createElement("input", {type: "checkbox", checked: this.props.filters.attributes, onChange: this.checkboxChanged.bind(this, 'attributes')}), " attributes ", React.createElement("br", null)), React.createElement("br", null), 
+          React.createElement("label", null, React.createElement("input", {type: "checkbox", checked: this.props.filters.showCssTransitions, onChange: this.checkboxChanged.bind(this, 'showCssTransitions')}), " Show CSS transitions ", React.createElement("br", null))
         )
       )
 
@@ -122,73 +185,59 @@ function startWaitWhat() {
         )
       )
 
-      if (this.state.expanded) {
-        var expandContract = React.createElement("button", {onClick: this.contract}, "-")
-      } else {
-        var expandContract = React.createElement("button", {onClick: this.expand}, "+")
-      }
-      
-      
-      return (
-        React.createElement("div", {style: style}, 
-          expandContract, 
-           this.state.expanded ? ui : ""
-        )
-      );
+      return ui;
     },
-
-    expand: function () {
-      this.setState({expanded: true});
-    },
-    contract: function () {
-      this.setState({expanded: false});
-    },
-
 
     checkboxChanged: function (checkboxName, ev) {
-      this.state.filters[checkboxName] = ev.target.checked;
-      this.setState({filters: this.state.filters})
+      this.props.filters[checkboxName] = ev.target.checked;
+      this.props.setFilters(this.props.filters);
+    },
+
+    // Filters the current observations based on user's chosen filters
+    // @returns {Observation[]}
+    filterObservations: function() {
+      // Filter which items should be shown
+      var observations = this.props.observations.observations.map(function(observation,key) {
+        observation.observationsIndex = key;
+        return observation;
+      });
+      if (!this.props.filters['attributes']) {
+        observations = _.reject(observations, {type: 'attributes'});
+      }
+      if (!this.props.filters['childList']) {
+        observations = _.reject(observations, {type: 'childList'});
+      }
+      if (!this.props.filters['showCssTransitions']) {
+        observations = _.reject(observations, isCssTransition);
+      }
+      return observations;
     },
 
     renderList: function () {
-      if (this.state.observations) {
-
-        // Filter which items should be shown
-        var observations = this.state.observations.observations.map(function(observation,key) {
-          observation.observationsIndex = key;
-          return observation;
-        });
-        if (!this.state.filters['attributes']) {
-          observations = _.reject(observations, {type: 'attributes'});
-        }
-        if (!this.state.filters['childList']) {
-          observations = _.reject(observations, {type: 'childList'});
-        }
-        if (!this.state.filters['showCssTransitions']) {
-          observations = _.reject(observations, isCssTransition);
-        }
-
-        // Generate <li>s for each
-        var listLis = observations.map((x) => {
-          var summary = x.selector + ', ' + x.type;
-          var details = this.renderListDetails(x);
-          var detailsToggle = x.expanded ? "-" : "+";
-          var key = x.observationsIndex;
-          return (
-            React.createElement("li", {key: key, 
-                onClick: this.listClicked.bind(this,key), 
-                onMouseEnter: this.listHovered.bind(this,key,true), 
-                onMouseLeave: this.listHovered.bind(this,key,false)
-                }, 
-              detailsToggle, " ", summary, " ", details
-            )
-          );
-        });
-        return React.createElement("ul", null, listLis);
-      }
-      else {
+      if (!this.props.observations) {
         return "";
       }
+      observations = this.filterObservations();
+
+      // Generate <li>s for each
+      var listLis = observations.map((x) => {
+        var summary = x.selector + ', ' + x.type;
+        var details = this.renderListDetails(x);
+        var detailsToggle = x.expanded ? "-" : "+";
+        var key = x.observationsIndex;
+        return (
+          React.createElement("li", {key: key, 
+              onMouseEnter: this.listHovered.bind(this,key,true), 
+              onMouseLeave: this.listHovered.bind(this,key,false)}, 
+              React.createElement("input", {type: "checkbox", checked: x.checked, onChange: this.listCheckboxChanged.bind(this, key)}), 
+              React.createElement("span", {onClick: this.listClicked.bind(this,key)}, 
+              detailsToggle, " ", summary
+              ), 
+            details
+          )
+        );
+      });
+      return React.createElement("ul", null, listLis);
 
     },
 
@@ -238,18 +287,17 @@ function startWaitWhat() {
       return lis;
     },
 
-
     listClicked: function (key) {
-      var obs = this.state.observations.observations[key];
+      var obs = this.props.observations.observations[key];
       obs.expanded = !obs.expanded;
-      this.setState({observations: this.state.observations});
+      this.props.setObservations(this.props.observations);
     },
 
     listHovered: function(key, hovered) {
-      var obs = this.state.observations.observations[key];
+      var obs = this.props.observations.observations[key];
       // Maybe want to keep track of this later
       // obs.hovered = hovered;
-      // this.setState({observations: this.state.observations});
+      // this.props.setObservations(this.props.observations);
 
       // Highlight items on hover
       if (hovered) {
@@ -279,6 +327,12 @@ function startWaitWhat() {
           }
         }, 1);
       }
+    },
+
+    listCheckboxChanged: function (key) {
+      var observation = this.props.observations.observations[key];
+      observation.checked = !observation.checked
+      this.props.setObservations(this.props.observations);
     },
 
     isHoverModification: function (mutation) {
@@ -325,8 +379,8 @@ function startWaitWhat() {
                 var value = target.getAttribute(mutation.attributeName);
                 var oldValue = mutation.oldValue;
                 if (value !== oldValue) {
-                  this.state.observations.addAttribute(target, attributeName, oldValue, value);
-                  this.setState({observations: this.state.observations});
+                  this.props.observations.addAttribute(target, attributeName, oldValue, value);
+                  this.props.setObservations(this.props.observations);
                 }
                 break;
 
@@ -345,8 +399,8 @@ function startWaitWhat() {
                   var nodes = removed;
                   var type = 'removed';
                 }
-                this.state.observations.addChildList(target, type, nodes);
-                this.setState({observations: this.state.observations});
+                this.props.observations.addChildList(target, type, nodes);
+                this.props.setObservations(this.props.observations);
                 break;
             }
         })
@@ -364,24 +418,22 @@ function startWaitWhat() {
       }
       observer.observe(rootNode, opts);
 
-      this.setState({
-        listening: true,
-        observations: observations,
-        observer: observer
-      });
+      this.props.setListening(true);
+      this.props.setObservations(observations);
+      this.props.setObserver(observer);
     },
     stopListening: function() {
       console.log('stop listening');
-      console.log(this.state.observations.observations);
-      this.state.observer.disconnect();
-      this.setState({listening: false});
+      console.log(this.props.observations.observations);
+      this.props.observer.disconnect();
+      this.props.setListening(false);
     }
 
   });
 
   var newDiv = document.createElement("div");
   document.body.appendChild(newDiv);
-  ReactDOM.render(React.createElement(HelloMessage, {rootEl: newDiv}), newDiv);
+  ReactDOM.render(React.createElement(MainView, {rootEl: newDiv}), newDiv);
 }
 
 
