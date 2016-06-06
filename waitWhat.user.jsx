@@ -11,9 +11,7 @@
 // ==/UserScript==
 
 // TODO:
-// Details for all mutations (only attribute newvalue?): store them 
-// Fix body selector
-
+// Prettify overview list. Show CSS transition info, added/removed etc
 
 // Restore console.log
 delete console.log;
@@ -79,7 +77,8 @@ function startWaitWhat() {
         observations:  null,
         filters: {
           childList: true,
-          attributes: true
+          attributes: true,
+          showCssTransitions: false
         }
       }
     },
@@ -104,7 +103,8 @@ function startWaitWhat() {
       var filterDiv = (
         <div>
           <label><input type="checkbox" checked={this.state.filters.childList} onChange={this.checkboxChanged.bind(this, 'childList')} /> childList (Add/remove from DOM)<br/></label><br/>
-          <label><input type="checkbox" checked={this.state.filters.attributes} onChange={this.checkboxChanged.bind(this, 'attributes')} /> attributes <br/></label>
+          <label><input type="checkbox" checked={this.state.filters.attributes} onChange={this.checkboxChanged.bind(this, 'attributes')} /> attributes <br/></label><br/>
+          <label><input type="checkbox" checked={this.state.filters.showCssTransitions} onChange={this.checkboxChanged.bind(this, 'showCssTransitions')} /> Show CSS transitions <br/></label>
         </div>
       )
 
@@ -158,10 +158,14 @@ function startWaitWhat() {
           observation.observationsIndex = key;
           return observation;
         });
-        for (var filterName in this.state.filters) {
-          if (!this.state.filters[filterName]) {
-            observations = _.reject(observations, {type: filterName});
-          }
+        if (!this.state.filters['attributes']) {
+          observations = _.reject(observations, {type: 'attributes'});
+        }
+        if (!this.state.filters['childList']) {
+          observations = _.reject(observations, {type: 'childList'});
+        }
+        if (!this.state.filters['showCssTransitions']) {
+          observations = _.reject(observations, isCssTransition);
         }
 
         // Generate <li>s for each
@@ -417,6 +421,37 @@ function parseStyle(styleStr) {
     styleObj[prop[0].trim()] = prop[1].trim();
   }
   return styleObj;
+}
+
+/**
+ * Checks whether the supplied observation is of a CSS transition
+ * (E.g. "opacity: 0" to "opacity: 0.02")
+ *
+ * @returns {Boolean}
+ */
+function isCssTransition(observation) {
+  if (observation.type !== 'attributes' || observation.attributeName !== 'style')
+    return false;
+  var style = parseStyle(observation.value);
+  var oldStyle = parseStyle(observation.oldValue);
+
+  // Both style objects should have exactly the same keys (e.g. 'opacity')
+  var styleKeys = Object.keys(style);
+  var oldStyleKeys = Object.keys(oldStyle);
+  var changedKeys = _.xor(styleKeys, oldStyleKeys)
+  if (changedKeys.length === 0) {
+    // The style should have exactly one property with a changed value (e.g. '0.27'/'0.29')
+    var changedKeys = _.xorWith(styleKeys, oldStyleKeys, function (styleKey, oldStyleKey) {
+      return style[styleKey] === oldStyle[oldStyleKey];
+    });
+    changedKeys = _.uniq(changedKeys);
+    if (changedKeys.length === 1) {
+      var key = changedKeys[0];
+      // Both old and new values should be numbers
+      return _.isFinite(Number(style[key])) && _.isFinite(Number(oldStyle[key]));
+    }
+  }
+  return false;
 }
 
 // ----------------------------------------------------------------------------
