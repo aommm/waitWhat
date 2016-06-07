@@ -82,7 +82,8 @@ function startWaitWhat() {
           childList: true,
           attributes: true,
           showCssTransitions: false
-        }
+        },
+        view: 'listView'
       }
     },
     render: function () {
@@ -99,23 +100,7 @@ function startWaitWhat() {
       }
       if (this.state.expanded) {
         var expandContract = <button onClick={this.contract}>-</button>
-        var content = (
-          <ListView
-            observer={this.state.observer}
-            observations={this.state.observations}
-            filters={this.state.filters}
-            listening={this.state.listening}
-            setObservations={this.setObservations.bind(this)}
-            setObserver={this.setObserver.bind(this)}
-            setListening={this.setListening.bind(this)}
-            setFilters={this.setFilters.bind(this)}
-            rootEl={this.props.rootEl}
-            />
-        )
-            /*
-            onExpand={this.expand.bind(this)}
-            onContract={this.contract.bind(this)}
-            */
+        var content = this.renderMain();
       } else {
         var expandContract = <button onClick={this.expand}>+</button>
         var content = "";
@@ -125,6 +110,40 @@ function startWaitWhat() {
           { expandContract }
           { content }
         </div>
+      )
+    },
+    renderMain: function () {
+      // body...
+      var renderers = {
+        "listView": this.renderListView,
+        "codeGeneration": this.renderCodeGeneration
+      }
+      return renderers[this.state.view].call(this);
+    },
+    renderListView: function () {
+      return (
+        <ListView
+            observer={this.state.observer}
+            observations={this.state.observations}
+            visibleObservations={this.visibleObservations()}
+            filters={this.state.filters}
+            listening={this.state.listening}
+            setObservations={this.setObservations.bind(this)}
+            setObserver={this.setObserver.bind(this)}
+            setListening={this.setListening.bind(this)}
+            setFilters={this.setFilters.bind(this)}
+            next={this.showCodeGeneration.bind(this)}
+            rootEl={this.props.rootEl}
+            /> /* */
+      );
+    },
+    renderCodeGeneration: function () {
+
+      return (
+        <CodeGeneration
+          chosenObservations={this.checkedObservations()}
+          back={this.showListView.bind(this)}
+          /> /* */
       )
     },
     expand: function () {
@@ -144,8 +163,45 @@ function startWaitWhat() {
     },
     setFilters: function (filters) {
       this.setState({filters: filters});
-    }
+    },
+    showListView: function () {
+      this.setState({view: 'listView'});
+    },
+    showCodeGeneration: function () {
+      this.setState({view: 'codeGeneration'});
+    },
 
+    // Filters the current observations based on user's chosen filters
+    // @returns {Observation[]}
+    visibleObservations: function() {
+      if (!this.state.observations) {
+        return [];
+      }
+      // Filter which items should be shown
+      var observations = this.state.observations.observations.map(function(observation,key) {
+        observation.observationsIndex = key;
+        return observation;
+      });
+      if (!this.state.filters['attributes']) {
+        observations = _.reject(observations, {type: 'attributes'});
+      }
+      if (!this.state.filters['childList']) {
+        observations = _.reject(observations, {type: 'childList'});
+      }
+      if (!this.state.filters['showCssTransitions']) {
+        observations = _.reject(observations, isCssTransition);
+      }
+      return observations;
+    },
+
+    // Returns all observations which are both visible and checked by the user
+    checkedObservations: function () {
+      var observations = this.visibleObservations();
+      console.log('observations:', observations);
+      observations = _.filter(observations, {checked: true});
+      console.log('observations:', observations);
+      return observations;
+    }
 
 
   });
@@ -172,6 +228,7 @@ function startWaitWhat() {
       )
 
       var listUl = this.renderList();
+      var nextDisabled = !this.props.observations || !this.props.observations.observations.length;
 
       var ui = (
         <div>
@@ -182,10 +239,17 @@ function startWaitWhat() {
           <hr/>
           {listUl}
           <br/>
+          <button onClick={this.next} disabled={nextDisabled}>Generate code</button>
         </div>
       )
 
       return ui;
+    },
+
+    // Go to next screen
+    next: function () {
+      this.stopListening();
+      this.props.next();
     },
 
     checkboxChanged: function (checkboxName, ev) {
@@ -193,34 +257,13 @@ function startWaitWhat() {
       this.props.setFilters(this.props.filters);
     },
 
-    // Filters the current observations based on user's chosen filters
-    // @returns {Observation[]}
-    filterObservations: function() {
-      // Filter which items should be shown
-      var observations = this.props.observations.observations.map(function(observation,key) {
-        observation.observationsIndex = key;
-        return observation;
-      });
-      if (!this.props.filters['attributes']) {
-        observations = _.reject(observations, {type: 'attributes'});
-      }
-      if (!this.props.filters['childList']) {
-        observations = _.reject(observations, {type: 'childList'});
-      }
-      if (!this.props.filters['showCssTransitions']) {
-        observations = _.reject(observations, isCssTransition);
-      }
-      return observations;
-    },
-
     renderList: function () {
-      if (!this.props.observations) {
+      if (!this.props.visibleObservations) {
         return "";
       }
-      observations = this.filterObservations();
 
       // Generate <li>s for each
-      var listLis = observations.map((x) => {
+      var listLis = this.props.visibleObservations.map((x) => {
         var summary = x.selector + ', ' + x.type;
         var details = this.renderListDetails(x);
         var detailsToggle = x.expanded ? "-" : "+";
@@ -431,11 +474,58 @@ function startWaitWhat() {
 
   });
 
+  var CodeGeneration = React.createClass({
+    render: function () {
+
+      if (!this.props.chosenObservations) {
+        var lis = [];
+      } else {
+        var cg = new CodeGenerator();
+        var lis = this.props.chosenObservations.map(function (observation, key) {
+          return <li key={key}>{cg.generateCode(observation)}</li>
+        });        
+      }
+
+      return (
+        <div>
+          {lis}
+          <button onClick={this.props.back}>Back</button>
+        </div>
+      )
+    }
+
+  })
+
   var newDiv = document.createElement("div");
   document.body.appendChild(newDiv);
   ReactDOM.render(<MainView rootEl={newDiv} />, newDiv);
 }
 
+
+function CodeGenerator() {}
+CodeGenerator.prototype.generateCode = function (observation) {
+  if (_.isArray(observation)) {
+    return observations.map(this.generateCode.bind(this));
+  }
+  var codeGenerators = {
+    'childList': this._childList,
+    'attributes': this._attributes
+  }
+  return codeGenerators[observation.type].call(this, observation);
+}
+CodeGenerator.prototype._childList = function (observation) {
+  console.log('observation cl:', observation);
+  if (observation.childListType === 'added') {
+
+  } else if (observation.childListType === 'removed') {
+
+  }
+  return "abc 123";
+}
+CodeGenerator.prototype._attributes = function (observation) {
+  console.log('observation at:', observation);
+  return "abc 124";
+}
 
 // ----------------------------------------------------------------------------
 // Utils

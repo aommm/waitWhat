@@ -1,0 +1,46 @@
+<html>
+<head>
+	<script>
+
+		console.log('add element xxx')
+		var i = 0;
+		function addElement() {
+			var container = document.getElementById('container');
+			// console.log('add element')
+			var el = document.createElement("div");
+			el.appendChild(document.createTextNode("hej svejs " + (i++)));
+			container.appendChild(el);
+		}
+
+		function changeAttribute() {
+			// console.log('change attribute')
+			var el = document.getElementById('container')
+			console.log(el);
+			el = el.getElementsByTagName("div")[0];
+			console.log(el);
+			if (el) {
+				el.setAttribute('style', 'asdf 1234 ' + (i++));
+			}
+		}
+
+	</script>
+
+	<script src="react-15.1.0.min.js"></script>
+	<script src="react-dom-15.1.0.min.js"></script>
+	<script src="css-selector-generator.js"></script>
+	<script src="lodash.min.js"></script>
+	
+	<style>
+		body {
+			margin-left: 330px;
+		}
+	</style>
+</head>
+<body>
+	<div id="container">
+		<button onclick="addElement()">Add element</button>
+		<button onclick="changeAttribute()">Change attribute</button>
+	</div>
+	<script src="waitWhat.user.js"></script>
+</body>
+</html>
