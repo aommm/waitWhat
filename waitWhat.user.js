@@ -478,17 +478,15 @@ function startWaitWhat() {
     render: function () {
 
       if (!this.props.chosenObservations) {
-        var lis = [];
+        var code = "No chosen observations";
       } else {
-        var cg = new CodeGenerator();
-        var lis = this.props.chosenObservations.map(function (observation, key) {
-          return React.createElement("li", {key: key}, cg.generateCode(observation))
-        });        
+        var cg = new CasperCodeGenerator();
+        var code = cg.generateCode(this.props.chosenObservations);
       }
 
       return (
         React.createElement("div", null, 
-          lis, 
+          code, 
           React.createElement("button", {onClick: this.props.back}, "Back")
         )
       )
@@ -502,24 +500,68 @@ function startWaitWhat() {
 }
 
 
-function CodeGenerator() {}
-CodeGenerator.prototype.generateCode = function (observation) {
-  if (_.isArray(observation)) {
-    return observations.map(this.generateCode.bind(this));
+function CasperCodeGenerator() {
+  this.reset();
+}
+CasperCodeGenerator.prototype.reset = function () {
+  this.attributeChanged = false;
+}
+
+CasperCodeGenerator.prototype.waitForAttributeTemplate = `
+// CasperJS helper that waits until 'selector' gets a specific attribute
+casper.waitForAttribute = function (selector, attributeName, attributeValue, cb) {
+  this.waitFor(function () {
+    var value = this.getElementAttribute(selector, attributeName);
+    return value === attributeValue;
+  }, cb);
+}
+`;
+
+CasperCodeGenerator.prototype.generateCode = function (observations) {
+  var jss = observations.map(this._generateCode.bind(this));
+  if (this.attributeChanged) {
+    var waitForAttributeTemplate = this.waitForAttributeTemplate.split('\n');
+    waitForAttributeTemplate = [...intersperse(waitForAttributeTemplate, React.createElement("br", null))]
+    console.log('tmpei', waitForAttributeTemplate);
+    jss.unshift(waitForAttributeTemplate);
   }
+  console.log('jss:', jss);
+  jss = [...intersperse(jss, React.createElement("br", null))];
+  js = _.flattenDeep(jss);
+  console.log(jss);
+  console.log(js);
+
+  this.reset();
+  return js;
+}
+CasperCodeGenerator.prototype._generateCode = function (observation) {
   var codeGenerators = {
     'childList': this._childList,
     'attributes': this._attributes
   }
-  return codeGenerators[observation.type].call(this, observation);
+  var js = codeGenerators[observation.type].call(this, observation);
+  return [js];
 }
-CodeGenerator.prototype._childList = function (observation) {
+CasperCodeGenerator.prototype._childList = function (observation) {
   console.log('observation cl:', observation);
-  return "abc 123";
+  childSelectors = Array.prototype.slice.call(observation.nodes).map(function (node) {
+    return getSelector(node);
+  });
+  if (observation.childListType === 'added') {
+    var js = childSelectors.map(function (childSelector) {
+      return `casper.waitForSelector('${childSelector}');`
+    });
+  } else if (observation.childListType === 'removed') {
+    var js = childSelectors.map(function (childSelector) {
+      return `casper.waitWhileSelector('${childSelector}');`
+    });
+  }
+  return [...intersperse(js, React.createElement("br", null))];
 }
-CodeGenerator.prototype._attributes = function (observation) {
+CasperCodeGenerator.prototype._attributes = function (observation) {
   console.log('observation at:', observation);
-  return "abc 124";
+  this.attributeChanged = true;
+  return `casper.waitForAttribute('${observation.selector}', '${observation.attributeName}', '${observation.value}');`
 }
 
 // ----------------------------------------------------------------------------
@@ -555,7 +597,7 @@ function parseStyle(styleStr) {
   var styleObj = {};
   for (var propKey in props) {
     var prop = props[propKey];
-    styleObj[prop[0].trim()] = prop[1].trim();
+    styleObj[prop[0].trim()] = prop[1] && prop[1].trim();
   }
   return styleObj;
 }
@@ -589,6 +631,15 @@ function isCssTransition(observation) {
     }
   }
   return false;
+}
+
+function *intersperse(a, delim) {
+  let first = true;
+  for (var x of a) {
+    if (!first) yield delim;
+    first = false;
+    yield x;
+  }
 }
 
 // ----------------------------------------------------------------------------
