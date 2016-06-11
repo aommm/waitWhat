@@ -64,6 +64,19 @@ Observations.prototype.addChildList = function (target, type, nodes) {
 
 // ----------------------------------------------------------------------------
 // WaitWhat class
+// The magic code
+
+// Has to be here
+var oldAddEventListener = EventTarget.prototype.addEventListener;
+var nEvents = 0;
+var globalEventHandler = function () {}; // Will be overriden by interested parties
+EventTarget.prototype.addEventListener = function(eventName, eventHandler) {
+  oldAddEventListener.call(this, eventName, function(event) {
+    // console.log('event happened', eventName, this, (nEvents++));
+    globalEventHandler(this, eventName, event);
+    eventHandler(event);
+  });
+};
 
 
 // ----------------------------------------------------------------------------
@@ -406,6 +419,14 @@ function startWaitWhat() {
     startListening: function() {
       console.log('listening');
 
+
+      // We're interested in user events!
+      // TODO put behind boolean
+      globalEventHandler = function () {
+        console.log('event happened', arguments);
+      }
+
+
       var observations = new Observations();
       var observer = new MutationObserver( (mutations) => {
         mutations.forEach( (mutation) => {
@@ -475,19 +496,46 @@ function startWaitWhat() {
   });
 
   var CodeGeneration = React.createClass({displayName: "CodeGeneration",
+
+    getInitialState: function () {
+      return {
+        testFramework: "casperjs"
+      }
+    },
+
+    testFrameworkChanged: function (ev) {
+      this.setState({
+        testFramework: ev.target.value
+      })
+      console.log(arguments);
+    },
+    
     render: function () {
+      var select = (
+        React.createElement("select", {value: this.state.testFramework, onChange: this.testFrameworkChanged}, 
+          React.createElement("option", {value: "casperjs"}, "CasperJS"), 
+          React.createElement("option", {value: "selenium"}, "Selenium")
+        )
+      );
 
       if (!this.props.chosenObservations) {
         var code = "No chosen observations";
       } else {
-        var cg = new CasperCodeGenerator();
+        if (this.state.testFramework == "casperjs") {
+          var cg = new CasperCodeGenerator();
+        } else if (this.state.testFramework == "selenium") {
+          console.log("TODO implement selenium")
+          var cg = new CasperCodeGenerator();
+        }
         var code = cg.generateCode(this.props.chosenObservations);
       }
 
       return (
         React.createElement("div", null, 
-          code, 
-          React.createElement("button", {onClick: this.props.back}, "Back")
+          React.createElement("button", {onClick: this.props.back}, "Back"), React.createElement("br", null), 
+          select, 
+          React.createElement("hr", null), 
+          code
         )
       )
     }
@@ -522,10 +570,8 @@ CasperCodeGenerator.prototype.generateCode = function (observations) {
   if (this.attributeChanged) {
     var waitForAttributeTemplate = this.waitForAttributeTemplate.split('\n');
     waitForAttributeTemplate = [...intersperse(waitForAttributeTemplate, React.createElement("br", null))]
-    console.log('tmpei', waitForAttributeTemplate);
     jss.unshift(waitForAttributeTemplate);
   }
-  console.log('jss:', jss);
   jss = [...intersperse(jss, React.createElement("br", null))];
   js = _.flattenDeep(jss);
   console.log(jss);
