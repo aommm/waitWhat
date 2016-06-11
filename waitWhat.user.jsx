@@ -418,17 +418,29 @@ function startWaitWhat() {
 
     startListening: function() {
       console.log('listening');
+      var observations = new Observations();
+      this.props.setObservations(observations);
+      
+      this.startListeningEvents();
+      this.startListeningMutations();
+      this.props.setListening(true);
+    },
 
+    // Start listening for user events
+    startListeningEvents: function () {
 
+      // TODO why aren't 'event happened' printed before a DOM modification?
       // We're interested in user events!
       // TODO put behind boolean
       // TODO filter out events on our UI
+      // TODO add observations
       globalEventHandler = function () {
         console.log('event happened', arguments);
       }
+    },
 
-
-      var observations = new Observations();
+    // Start listening for DOM mutations
+    startListeningMutations: function () {
       var observer = new MutationObserver( (mutations) => {
         mutations.forEach( (mutation) => {
             var target = mutation.target;
@@ -468,7 +480,7 @@ function startWaitWhat() {
                 this.props.setObservations(this.props.observations);
                 break;
             }
-        })
+        });
       });
 
       // Attach listener to root node and listen for everything
@@ -483,12 +495,12 @@ function startWaitWhat() {
       }
       observer.observe(rootNode, opts);
 
-      this.props.setListening(true);
-      this.props.setObservations(observations);
       this.props.setObserver(observer);
     },
+
     stopListening: function() {
       console.log('stop listening');
+      globalEventHandler = function() {}
       console.log(this.props.observations.observations);
       this.props.observer.disconnect();
       this.props.setListening(false);
