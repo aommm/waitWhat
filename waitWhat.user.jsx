@@ -268,11 +268,11 @@ function startWaitWhat() {
       
       var filterDiv = (
         <div>
-          <label><input type="checkbox" checked={this.props.filters.childList} onChange={this.checkboxChanged.bind(this, 'childList')} /> childList (Add/remove from DOM)<br/></label><br/>
-          <label><input type="checkbox" checked={this.props.filters.attributes} onChange={this.checkboxChanged.bind(this, 'attributes')} /> attributes <br/></label><br/>
+          <label><input type="checkbox" checked={this.props.filters.childList} onChange={this.checkboxChanged.bind(this, 'childList')} /> childList (Add/remove from DOM)<br/></label>
+          <label><input type="checkbox" checked={this.props.filters.attributes} onChange={this.checkboxChanged.bind(this, 'attributes')} /> attributes <br/></label>
           <label><input type="checkbox" checked={this.props.filters.showCssTransitions} onChange={this.checkboxChanged.bind(this, 'showCssTransitions')} /> Show CSS transitions <br/></label>
           <label><input type="checkbox" checked={this.props.filters.hideEvents} onChange={this.checkboxChanged.bind(this, 'hideEvents')} /> Hide these events (separated by comma):<br/></label>
-          <input type="text" value={hideEventsStr} onChange={this.listChanged.bind(this, 'hideEventsList')} /><br/>
+          <input type="text" value={hideEventsStr} size="50" onChange={this.listChanged.bind(this, 'hideEventsList')} /><br/>
         </div>
       )
 

@@ -268,11 +268,11 @@ function startWaitWhat() {
       
       var filterDiv = (
         React.createElement("div", null, 
-          React.createElement("label", null, React.createElement("input", {type: "checkbox", checked: this.props.filters.childList, onChange: this.checkboxChanged.bind(this, 'childList')}), " childList (Add/remove from DOM)", React.createElement("br", null)), React.createElement("br", null), 
-          React.createElement("label", null, React.createElement("input", {type: "checkbox", checked: this.props.filters.attributes, onChange: this.checkboxChanged.bind(this, 'attributes')}), " attributes ", React.createElement("br", null)), React.createElement("br", null), 
+          React.createElement("label", null, React.createElement("input", {type: "checkbox", checked: this.props.filters.childList, onChange: this.checkboxChanged.bind(this, 'childList')}), " childList (Add/remove from DOM)", React.createElement("br", null)), 
+          React.createElement("label", null, React.createElement("input", {type: "checkbox", checked: this.props.filters.attributes, onChange: this.checkboxChanged.bind(this, 'attributes')}), " attributes ", React.createElement("br", null)), 
           React.createElement("label", null, React.createElement("input", {type: "checkbox", checked: this.props.filters.showCssTransitions, onChange: this.checkboxChanged.bind(this, 'showCssTransitions')}), " Show CSS transitions ", React.createElement("br", null)), 
           React.createElement("label", null, React.createElement("input", {type: "checkbox", checked: this.props.filters.hideEvents, onChange: this.checkboxChanged.bind(this, 'hideEvents')}), " Hide these events (separated by comma):", React.createElement("br", null)), 
-          React.createElement("input", {type: "text", value: hideEventsStr, onChange: this.listChanged.bind(this, 'hideEventsList')}), React.createElement("br", null)
+          React.createElement("input", {type: "text", value: hideEventsStr, size: "50", onChange: this.listChanged.bind(this, 'hideEventsList')}), React.createElement("br", null)
         )
       )
 
