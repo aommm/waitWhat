@@ -17,7 +17,10 @@
 
 // Restore console.log
 delete console.log;
-
+window.addEventListener('load', function () {
+  console.log("hej")
+  startWaitWhat();
+});
 
 // ----------------------------------------------------------------------------
 // 'Observations' data structure
@@ -60,6 +63,23 @@ Observations.prototype.addChildList = function (target, type, nodes) {
     };
     this.add(observation);
 }
+
+Observations.prototype.addEvent = function (target, name, event) {
+  var badEvents = ['mouseout', 'mouseover', 'mousemove']
+  if (badEvents.indexOf(name) !== -1) {
+    return;
+  }
+  console.log('ev:', event)
+  var observation = {
+    target: target,
+    selector: getSelector(target),
+    type: 'event',
+    eventName: name,
+    event: event
+  };
+  this.add(observation);
+}
+
 
 
 // ----------------------------------------------------------------------------
@@ -204,6 +224,14 @@ function startWaitWhat() {
       if (!this.state.filters['showCssTransitions']) {
         observations = _.reject(observations, isCssTransition);
       }
+      if (this.state.filters['hideEvents']) {
+        observations = _.reject(observations, (observation) => {
+          var eventsToHide = this.state.filters['hideEventsList'];
+          if (observation.type == 'event' && eventsToHide) {
+            return eventsToHide.includes(observation.eventName);
+          }
+        }); 
+      }
       return observations;
     },
 
@@ -232,11 +260,19 @@ function startWaitWhat() {
         var startStopButton = (<button onClick={this.startListening}>Start listening</button>);
       }
 
+      if (this.props.filters.hideEventsList) {
+        var hideEventsStr = this.props.filters.hideEventsList.join(',');
+      } else {
+        var hideEventsStr = "";
+      }
+      
       var filterDiv = (
         <div>
           <label><input type="checkbox" checked={this.props.filters.childList} onChange={this.checkboxChanged.bind(this, 'childList')} /> childList (Add/remove from DOM)<br/></label><br/>
           <label><input type="checkbox" checked={this.props.filters.attributes} onChange={this.checkboxChanged.bind(this, 'attributes')} /> attributes <br/></label><br/>
           <label><input type="checkbox" checked={this.props.filters.showCssTransitions} onChange={this.checkboxChanged.bind(this, 'showCssTransitions')} /> Show CSS transitions <br/></label>
+          <label><input type="checkbox" checked={this.props.filters.hideEvents} onChange={this.checkboxChanged.bind(this, 'hideEvents')} /> Hide these events (separated by comma):<br/></label>
+          <input type="text" value={hideEventsStr} onChange={this.listChanged.bind(this, 'hideEventsList')} /><br/>
         </div>
       )
 
@@ -267,6 +303,16 @@ function startWaitWhat() {
 
     checkboxChanged: function (checkboxName, ev) {
       this.props.filters[checkboxName] = ev.target.checked;
+      this.props.setFilters(this.props.filters);
+    },
+
+    listChanged: function (listName, ev) {
+      // Parse string into list and save
+      var list = ev.target.value.split(",");
+      list = list.map((item) => {
+        return item.trim();
+      });
+      this.props.filters[listName] = list;
       this.props.setFilters(this.props.filters);
     },
 
@@ -303,7 +349,8 @@ function startWaitWhat() {
       }
       var renderers = {
         "childList": this.renderListDetailsChildList,
-        "attributes": this.renderListDetailsAttributes
+        "attributes": this.renderListDetailsAttributes,
+        "event": this.renderListDetailsEvent
       }
       var renderer = renderers[mutation.type] || _.constant("")
       var lis = renderer.call(this, mutation);
@@ -337,11 +384,19 @@ function startWaitWhat() {
     },
     renderListDetailsAttributes: function (mutation) {
       var lis = [
-        <li>Old value: {mutation.oldValue}</li>,
-        <li>New value: {mutation.value}</li>
+        <li>Old value: {mutation.attributeName}="{mutation.oldValue}"</li>,
+        <li>New value: {mutation.attributeName}="{mutation.value}"</li>
       ];
       return lis;
     },
+    renderListDetailsEvent: function (mutation) {
+      var lis = [
+        <li>Event name: {mutation.eventName}</li>
+      ];
+      return lis;
+    },
+
+
 
     listClicked: function (key) {
       var obs = this.props.observations.observations[key];
@@ -428,14 +483,24 @@ function startWaitWhat() {
 
     // Start listening for user events
     startListeningEvents: function () {
+      console.log('startListeningEvents')
 
       // TODO why aren't 'event happened' printed before a DOM modification?
       // We're interested in user events!
       // TODO put behind boolean
       // TODO filter out events on our UI
       // TODO add observations
-      globalEventHandler = function () {
-        console.log('event happened', arguments);
+      var self = this;
+      globalEventHandler = function (ctx, name, event) {
+        // console.log('event happened', arguments);
+        // Do not include DOM modifications to our UI
+        var target = event.target;
+        var ourUI = self.props.rootEl.contains(target); 
+        if (ourUI) {
+          return;
+        }
+        self.props.observations.addEvent(target, name, event);
+        self.props.setObservations(self.props.observations);
       }
     },
 
@@ -718,6 +783,5 @@ function *intersperse(a, delim) {
 //   })
 // })
 
-startWaitWhat();
 // console.log(waitWhat)
 
