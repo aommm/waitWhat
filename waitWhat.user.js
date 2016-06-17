@@ -69,9 +69,9 @@ Observations.prototype.addEvent = function (target, name, event) {
   if (badEvents.indexOf(name) !== -1) {
     return;
   }
-  console.log('ev:', event)
   var observation = {
     target: target,
+    targetValue: target.value,
     selector: getSelector(target),
     type: 'event',
     eventName: name,
@@ -114,6 +114,7 @@ function startWaitWhat() {
         filters: {
           childList: true,
           attributes: true,
+          mergeInputEvents: true,
           showCssTransitions: false,
           hideEvents: true,
           hideEventsList: ['mousedown','mouseup','keypress','keydown','keyup'],
@@ -244,6 +245,25 @@ function startWaitWhat() {
           }
         }); 
       }
+      if (this.state.filters['mergeInputEvents']) {
+        var latestObservation = null;
+        for (var i = observations.length - 1; i >= 0; i--) {
+          var observation = observations[i];
+          if (observation.type == 'event' && observation.eventName == 'input') {
+            // Should remove? (== part of already seen input sequence?)
+            if (latestObservation && latestObservation.selector == observation.selector) {
+              // console.log('throwing away observation', observation);
+              delete observations[i];
+            }
+            // Didn't remove - start of new input cycle
+            else {
+              // console.log('keeping observation', observation);
+              latestObservation = observation;
+            }
+          }
+        };
+        observations = _.filter(observations);
+      }
       return observations;
     },
 
@@ -288,6 +308,7 @@ function startWaitWhat() {
           React.createElement("label", null, React.createElement("input", {type: "checkbox", checked: this.props.filters.childList, onChange: this.checkboxChanged.bind(this, 'childList')}), " childList (Add/remove from DOM)", React.createElement("br", null)), 
           React.createElement("label", null, React.createElement("input", {type: "checkbox", checked: this.props.filters.attributes, onChange: this.checkboxChanged.bind(this, 'attributes')}), " attributes ", React.createElement("br", null)), 
           React.createElement("label", null, React.createElement("input", {type: "checkbox", checked: this.props.filters.showCssTransitions, onChange: this.checkboxChanged.bind(this, 'showCssTransitions')}), " Show CSS transitions ", React.createElement("br", null)), 
+          React.createElement("label", null, React.createElement("input", {type: "checkbox", checked: this.props.filters.mergeInputEvents, onChange: this.checkboxChanged.bind(this, 'mergeInputEvents')}), " Merge input events ", React.createElement("br", null)), 
           React.createElement("label", null, React.createElement("input", {type: "checkbox", checked: this.props.filters.hideEvents, onChange: this.checkboxChanged.bind(this, 'hideEvents')}), " Hide these events (separated by comma):", React.createElement("br", null)), 
           React.createElement("input", {type: "text", value: hideEventsStr, size: "50", onChange: this.listChanged.bind(this, 'hideEventsList')}), React.createElement("br", null), 
           React.createElement("label", null, React.createElement("input", {type: "checkbox", checked: this.props.filters.hideAttributes, onChange: this.checkboxChanged.bind(this, 'hideAttributes')}), " Hide these attribs (separated by comma):", React.createElement("br", null)), 
@@ -410,7 +431,8 @@ function startWaitWhat() {
     },
     renderListDetailsEvent: function (mutation) {
       var lis = [
-        React.createElement("li", null, "Event name: ", mutation.eventName)
+        React.createElement("li", null, "Event name: ", mutation.eventName),
+        React.createElement("li", null, "Target value: ", mutation.targetValue)
       ];
       return lis;
     },
