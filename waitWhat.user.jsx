@@ -633,9 +633,9 @@ function startWaitWhat() {
       var select = (
         <select value={this.state.testFramework} onChange={this.testFrameworkChanged}>
           <option value="casperjs">CasperJS</option>
-          <option value="selenium">Selenium</option>
         </select>
       );
+      // <option value="selenium">Selenium</option>
 
       if (!this.props.chosenObservations) {
         var code = "No chosen observations";
@@ -702,7 +702,8 @@ CasperCodeGenerator.prototype.generateCode = function (observations) {
 CasperCodeGenerator.prototype._generateCode = function (observation) {
   var codeGenerators = {
     'childList': this._childList,
-    'attributes': this._attributes
+    'attributes': this._attributes,
+    'event': this._event
   }
   var js = codeGenerators[observation.type].call(this, observation);
   return [js];
@@ -727,6 +728,17 @@ CasperCodeGenerator.prototype._attributes = function (observation) {
   console.log('observation at:', observation);
   this.attributeChanged = true;
   return `casper.waitForAttribute('${observation.selector}', '${observation.attributeName}', '${observation.value}');`
+}
+CasperCodeGenerator.prototype._event = function (observation) {
+  console.log('observation at:', observation);
+  switch (observation.eventName) {
+    case "click":
+      return `casper.click('${observation.selector}');`;
+    case "input":
+      // TODO: reset, keepFocus, modifiers?
+      return `casper.sendKeys('${observation.selector}', '${observation.targetValue}', {reset: true});`;
+
+  }
 }
 
 // ----------------------------------------------------------------------------
