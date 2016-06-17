@@ -114,7 +114,11 @@ function startWaitWhat() {
         filters: {
           childList: true,
           attributes: true,
-          showCssTransitions: false
+          showCssTransitions: false,
+          hideEvents: true,
+          hideEventsList: ['mousedown','mouseup','keypress','keydown','keyup'],
+          hideAttributes: false,
+          hideAttributesList: ['style','class']
         },
         view: 'listView'
       }
@@ -232,6 +236,14 @@ function startWaitWhat() {
           }
         }); 
       }
+      if (this.state.filters['hideAttributes']) {
+        observations = _.reject(observations, (observation) => {
+          var attribsToHide = this.state.filters['hideAttributesList'];
+          if (observation.type == 'attributes' && attribsToHide) {
+            return attribsToHide.includes(observation.attributeName);
+          }
+        }); 
+      }
       return observations;
     },
 
@@ -265,6 +277,11 @@ function startWaitWhat() {
       } else {
         var hideEventsStr = "";
       }
+      if (this.props.filters.hideAttributesList) {
+        var hideAttributesStr = this.props.filters.hideAttributesList.join(',');
+      } else {
+        var hideAttributesStr = "";
+      }
       
       var filterDiv = (
         React.createElement("div", null, 
@@ -272,7 +289,9 @@ function startWaitWhat() {
           React.createElement("label", null, React.createElement("input", {type: "checkbox", checked: this.props.filters.attributes, onChange: this.checkboxChanged.bind(this, 'attributes')}), " attributes ", React.createElement("br", null)), 
           React.createElement("label", null, React.createElement("input", {type: "checkbox", checked: this.props.filters.showCssTransitions, onChange: this.checkboxChanged.bind(this, 'showCssTransitions')}), " Show CSS transitions ", React.createElement("br", null)), 
           React.createElement("label", null, React.createElement("input", {type: "checkbox", checked: this.props.filters.hideEvents, onChange: this.checkboxChanged.bind(this, 'hideEvents')}), " Hide these events (separated by comma):", React.createElement("br", null)), 
-          React.createElement("input", {type: "text", value: hideEventsStr, size: "50", onChange: this.listChanged.bind(this, 'hideEventsList')}), React.createElement("br", null)
+          React.createElement("input", {type: "text", value: hideEventsStr, size: "50", onChange: this.listChanged.bind(this, 'hideEventsList')}), React.createElement("br", null), 
+          React.createElement("label", null, React.createElement("input", {type: "checkbox", checked: this.props.filters.hideAttributes, onChange: this.checkboxChanged.bind(this, 'hideAttributes')}), " Hide these attribs (separated by comma):", React.createElement("br", null)), 
+          React.createElement("input", {type: "text", value: hideAttributesStr, size: "50", onChange: this.listChanged.bind(this, 'hideAttributesList')}), React.createElement("br", null)
         )
       )
 
