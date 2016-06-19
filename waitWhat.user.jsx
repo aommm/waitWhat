@@ -104,6 +104,56 @@ EventTarget.prototype.addEventListener = function(eventName, eventHandler) {
 
 function startWaitWhat() {
 
+  // Add CSS
+  var css = `
+    #waitWhat {
+      padding: 5px;
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      z-index: 9000000;
+      background: whitesmoke;
+      max-height: 100%;
+      max-width: 80%;
+      overflow: scroll;
+      border-radius: 15px;
+      font-size: 100%;
+      color: #333333;
+      font-family: 'open sans', sans-serif;
+      font-weight: normal;
+      box-shadow: 2px 2px 5px 0px rgba(0,0,0,0.75);
+    }
+    #waitWhat input {
+      font-size: 100%;
+      font-weight: initial;
+      border: 1px solid #d1d1d1;
+      padding: 7px 10px;
+    }
+    #waitWhat button {
+      border-radius: 5px;
+      background-color: #18aae7;
+      color: white;
+      text-transform: none;
+      font-size: 100%;
+      height: auto;
+      width: auto;
+      padding: 5px 10px 5px 10px;
+      margin: 0px;
+    }
+    #waitWhat label {
+      display: inline;
+    }
+  `
+  var style = document.createElement("style");
+  style.type = 'text/css';
+  if (style.styleSheet){
+    style.styleSheet.cssText = css;
+  } else {
+    style.appendChild(document.createTextNode(css));
+  }
+  document.head.appendChild(style);
+
+
   var MainView = React.createClass({
     getInitialState: function () {
       return {
@@ -126,16 +176,6 @@ function startWaitWhat() {
     },
     render: function () {
       console.log('rendering MainView');
-      var style = {
-        position: 'absolute',
-        top: '20px',
-        left: '20px',
-        'zIndex': 9000000,
-        background: 'white',
-        maxHeight: '100%',
-        maxWidth: '80%',
-        overflow: 'scroll'
-      }
       if (this.state.expanded) {
         var expandContract = <button onClick={this.contract}>-</button>
         var content = this.renderMain();
@@ -144,7 +184,7 @@ function startWaitWhat() {
         var content = "";
       }
       return (
-        <div style={style}>
+        <div id="waitWhat">
           { expandContract }
           { content }
         </div>

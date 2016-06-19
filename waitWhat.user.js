@@ -104,6 +104,91 @@ EventTarget.prototype.addEventListener = function(eventName, eventHandler) {
 
 function startWaitWhat() {
 
+  // Add CSS
+  var css = `
+    #waitWhat {
+      padding: 5px;
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      z-index: 9000000;
+      background: whitesmoke;
+      max-height: 100%;
+      max-width: 80%;
+      overflow: scroll;
+      border-radius: 15px;
+      font-size: 100%;
+      color: #333333;
+      font-family: 'open sans', sans-serif;
+      font-weight: normal;
+      box-shadow: 2px 2px 5px 0px rgba(0,0,0,0.75);
+    }
+    #waitWhat input {
+      font-size: 100%;
+      font-weight: initial;
+      border: 1px solid #d1d1d1;
+      padding: 7px 10px;
+    }
+    #waitWhat button {
+      // background: initial;
+      border-radius: 5px;
+      background-color: #18aae7;
+      color: white;
+      text-transform: none;
+      font-size: 100%;
+      height: auto;
+      width: auto;
+      padding: 5px 10px 5px 10px;
+      margin: 0px;
+    }
+    #waitWhat label {
+      display: inline;
+    }
+
+/* http://meyerweb.com/eric/tools/css/reset/ 
+   v2.0 | 20110126
+   License: none (public domain)
+*/
+
+  // #waitWhat div, #waitWhat span, #waitWhat p, 
+  // #waitWhat a, #waitWhat img, #waitWhat form, #waitWhat label {
+  //   margin: 0;
+  //   padding: 0;
+  //   border: 0;
+  //   font-size: 100%;
+  //   font: inherit;
+  //   vertical-align: baseline;
+  // }
+
+  // /* HTML5 display-role reset for older browsers */
+  // #waitWhat ol, #waitWhat ul {
+  //   list-style: none;
+  // }
+  // #waitWhat blockquote, #waitWhat q {
+  //   quotes: none;
+  // }
+  // #waitWhat blockquote:before, blockquote:after,
+  // q:before, q:after {
+  //   content: '';
+  //   content: none;
+  // }
+  // #waitWhat table {
+  //   border-collapse: collapse;
+  //   border-spacing: 0;
+  // }
+
+
+  `
+  var style = document.createElement("style");
+  style.type = 'text/css';
+  if (style.styleSheet){
+    style.styleSheet.cssText = css;
+  } else {
+    style.appendChild(document.createTextNode(css));
+  }
+  document.head.appendChild(style);
+
+
   var MainView = React.createClass({displayName: "MainView",
     getInitialState: function () {
       return {
@@ -126,16 +211,6 @@ function startWaitWhat() {
     },
     render: function () {
       console.log('rendering MainView');
-      var style = {
-        position: 'absolute',
-        top: '20px',
-        left: '20px',
-        'zIndex': 9000000,
-        background: 'white',
-        maxHeight: '100%',
-        maxWidth: '80%',
-        overflow: 'scroll'
-      }
       if (this.state.expanded) {
         var expandContract = React.createElement("button", {onClick: this.contract}, "-")
         var content = this.renderMain();
@@ -144,7 +219,7 @@ function startWaitWhat() {
         var content = "";
       }
       return (
-        React.createElement("div", {style: style}, 
+        React.createElement("div", {id: "waitWhat"}, 
            expandContract, 
            content 
         )
