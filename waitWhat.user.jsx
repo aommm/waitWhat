@@ -4,10 +4,10 @@
 // @include     https://cloud.appspotr.com/*
 // @version     1
 // @grant       none
-// @require     react-15.1.0.min.js
-// @require     react-dom-15.1.0.min.js
-// @require     lodash.min.js
-// @require     css-selector-generator.js 
+// @require     libs/react-15.1.0.min.js
+// @require     libs/react-dom-15.1.0.min.js
+// @require     libs/lodash.min.js
+// @require     libs/css-selector-generator.js 
 // ==/UserScript==
 
 // TODO:

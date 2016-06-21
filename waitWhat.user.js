@@ -4,10 +4,10 @@
 // @include     https://cloud.appspotr.com/*
 // @version     1
 // @grant       none
-// @require     react-15.1.0.min.js
-// @require     react-dom-15.1.0.min.js
-// @require     lodash.min.js
-// @require     css-selector-generator.js 
+// @require     libs/react-15.1.0.min.js
+// @require     libs/react-dom-15.1.0.min.js
+// @require     libs/lodash.min.js
+// @require     libs/css-selector-generator.js 
 // ==/UserScript==
 
 // TODO:
@@ -130,7 +130,6 @@ function startWaitWhat() {
       padding: 7px 10px;
     }
     #waitWhat button {
-      // background: initial;
       border-radius: 5px;
       background-color: #18aae7;
       color: white;
@@ -144,40 +143,6 @@ function startWaitWhat() {
     #waitWhat label {
       display: inline;
     }
-
-/* http://meyerweb.com/eric/tools/css/reset/ 
-   v2.0 | 20110126
-   License: none (public domain)
-*/
-
-  // #waitWhat div, #waitWhat span, #waitWhat p, 
-  // #waitWhat a, #waitWhat img, #waitWhat form, #waitWhat label {
-  //   margin: 0;
-  //   padding: 0;
-  //   border: 0;
-  //   font-size: 100%;
-  //   font: inherit;
-  //   vertical-align: baseline;
-  // }
-
-  // /* HTML5 display-role reset for older browsers */
-  // #waitWhat ol, #waitWhat ul {
-  //   list-style: none;
-  // }
-  // #waitWhat blockquote, #waitWhat q {
-  //   quotes: none;
-  // }
-  // #waitWhat blockquote:before, blockquote:after,
-  // q:before, q:after {
-  //   content: '';
-  //   content: none;
-  // }
-  // #waitWhat table {
-  //   border-collapse: collapse;
-  //   border-spacing: 0;
-  // }
-
-
   `
   var style = document.createElement("style");
   style.type = 'text/css';
