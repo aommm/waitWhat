@@ -1,11 +1,11 @@
 
 ### GreaseMonkey ###
 # Libs will be moved to root when script is installed
-react-15.1.0.min.js
-react-dom-15.1.0.min.js
-lodash.min.js
-css-selector-generator.js
-.module-cache
+build/react-15.1.0.min.js
+build/react-dom-15.1.0.min.js
+build/lodash.min.js
+build/css-selector-generator.js
+build/.module-cache
 
 
 
