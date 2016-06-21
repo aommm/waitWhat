@@ -1,0 +1,5 @@
+# Libs will be moved to root when script is installed
+./react-15.1.0.min.js
+./react-dom-15.1.0.min.js
+./lodash.min.js
+./css-selector-generator.js
