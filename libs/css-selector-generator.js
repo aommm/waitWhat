@@ -252,7 +252,6 @@
 
     CssSelectorGenerator.prototype.getSelector = function(element) {
       var all_selectors, item, k, l, len, len1, parents, result, selector, selectors;
-      return "ABC!";
       all_selectors = [];
       parents = this.getParents(element);
       for (k = 0, len = parents.length; k < len; k++) {
