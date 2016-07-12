@@ -7,6 +7,7 @@ build/react-15.1.0.min.js
 build/react-dom-15.1.0.min.js
 build/lodash.min.js
 build/css-selector-generator.js
+build/polyfill.min.js
 build/.module-cache
 
 
