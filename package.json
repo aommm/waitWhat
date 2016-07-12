@@ -1,0 +1,31 @@
+{
+  "name": "waitWhat",
+  "version": "1.0.0",
+  "description": "",
+  "main": "build/waitWhat.user.js",
+  "dependencies": {
+    "babel-preset-es2015": "^6.9.0",
+    "babel-preset-react": "^6.11.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "watch": "babel --watch ./src --out-dir ./build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/aommm/waitWhat.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/aommm/waitWhat/issues"
+  },
+  "homepage": "https://github.com/aommm/waitWhat",
+  "babel": {
+    "presets": [
+      "es2015",
+      "react"
+    ]
+  }
+}

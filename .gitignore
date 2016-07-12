@@ -1,4 +1,6 @@
 
+node_modules
+
 ### GreaseMonkey ###
 # Libs will be moved to root when script is installed
 build/react-15.1.0.min.js
