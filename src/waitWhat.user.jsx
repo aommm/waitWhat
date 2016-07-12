@@ -5,6 +5,7 @@
 // @version     1
 // @grant       none
 // @require     libs/polyfill.min.js
+// @require     libs/react-frame.js
 // @require     libs/react-15.1.0.min.js
 // @require     libs/react-dom-15.1.0.min.js
 // @require     libs/lodash.min.js
@@ -108,56 +109,6 @@ EventTarget.prototype.addEventListener = function(eventName, eventHandler) {
 // UI
 
 function startWaitWhat() {
-
-  // Add CSS
-  var css = `
-    #waitWhat {
-      padding: 5px;
-      position: absolute;
-      top: 20px;
-      left: 20px;
-      z-index: 9000000;
-      background: whitesmoke;
-      max-height: 100%;
-      max-width: 80%;
-      overflow: scroll;
-      border-radius: 15px;
-      font-size: 100%;
-      color: #333333;
-      font-family: 'open sans', sans-serif;
-      font-weight: normal;
-      box-shadow: 2px 2px 5px 0px rgba(0,0,0,0.75);
-    }
-    #waitWhat input {
-      font-size: 100%;
-      font-weight: initial;
-      border: 1px solid #d1d1d1;
-      padding: 7px 10px;
-    }
-    #waitWhat button {
-      border-radius: 5px;
-      background-color: #18aae7;
-      color: white;
-      text-transform: none;
-      font-size: 100%;
-      height: auto;
-      width: auto;
-      padding: 5px 10px 5px 10px;
-      margin: 0px;
-    }
-    #waitWhat label {
-      display: inline;
-    }
-  `
-  var style = document.createElement("style");
-  style.type = 'text/css';
-  if (style.styleSheet){
-    style.styleSheet.cssText = css;
-  } else {
-    style.appendChild(document.createTextNode(css));
-  }
-  document.head.appendChild(style);
-
 
   var MainView = React.createClass({
     getInitialState: function () {
@@ -708,7 +659,17 @@ function startWaitWhat() {
 
   var newDiv = document.createElement("div");
   document.body.appendChild(newDiv);
-  ReactDOM.render(<MainView rootEl={newDiv} />, newDiv);
+
+  var iframeId = "myLilIframe-"+Math.round(Math.random()*10000000000)
+  var iframe = (
+    <Frame
+      id = {iframeId}
+      css = {contentCss} >
+      <MainView rootEl={newDiv} />
+    </Frame>
+  )
+  addIframeStyles(iframeId);
+  ReactDOM.render(iframe, newDiv);
 }
 
 
@@ -863,6 +824,69 @@ function *intersperse(a, delim) {
     yield x;
   }
 }
+
+
+// ----------------------------------------------------------------------------
+// Define styles of iframe and its contents
+
+// Adds iframe styles to the document's <head>
+function addIframeStyles(iframeId) {
+  var css = `#${iframeId} { ${iframeCss} }`;
+  // Add CSS
+  var style = document.createElement("style");
+  style.type = 'text/css';
+  if (style.styleSheet){
+    style.styleSheet.cssText = css;
+  } else {
+    style.appendChild(document.createTextNode(css));
+  }
+  document.head.appendChild(style);
+}
+
+var iframeCss = `
+      padding: 5px;
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      z-index: 9000000;
+      background: whitesmoke;
+      max-height: 100%;
+      max-width: 80%;
+      overflow: scroll;
+      border-radius: 15px;
+`
+
+var contentCss = `
+    #waitWhat {
+      background: whitesmoke;
+      font-size: 100%;
+      color: #333333;
+      font-family: 'open sans', sans-serif;
+      font-weight: normal;
+      box-shadow: 2px 2px 5px 0px rgba(0,0,0,0.75);
+    }
+    #waitWhat input {
+      font-size: 100%;
+      font-weight: initial;
+      border: 1px solid #d1d1d1;
+      padding: 7px 10px;
+    }
+    #waitWhat button {
+      border-radius: 5px;
+      background-color: #18aae7;
+      color: white;
+      text-transform: none;
+      font-size: 100%;
+      height: auto;
+      width: auto;
+      padding: 5px 10px 5px 10px;
+      margin: 0px;
+    }
+    #waitWhat label {
+      display: inline;
+    }
+  `
+
 
 // ----------------------------------------------------------------------------
 // Script

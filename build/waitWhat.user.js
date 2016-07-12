@@ -11,6 +11,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
 // @version     1
 // @grant       none
 // @require     libs/polyfill.min.js
+// @require     libs/react-frame.js
 // @require     libs/react-15.1.0.min.js
 // @require     libs/react-dom-15.1.0.min.js
 // @require     libs/lodash.min.js
@@ -110,17 +111,6 @@ EventTarget.prototype.addEventListener = function (eventName, eventHandler) {
 // UI
 
 function startWaitWhat() {
-
-  // Add CSS
-  var css = "\n    #waitWhat {\n      padding: 5px;\n      position: absolute;\n      top: 20px;\n      left: 20px;\n      z-index: 9000000;\n      background: whitesmoke;\n      max-height: 100%;\n      max-width: 80%;\n      overflow: scroll;\n      border-radius: 15px;\n      font-size: 100%;\n      color: #333333;\n      font-family: 'open sans', sans-serif;\n      font-weight: normal;\n      box-shadow: 2px 2px 5px 0px rgba(0,0,0,0.75);\n    }\n    #waitWhat input {\n      font-size: 100%;\n      font-weight: initial;\n      border: 1px solid #d1d1d1;\n      padding: 7px 10px;\n    }\n    #waitWhat button {\n      border-radius: 5px;\n      background-color: #18aae7;\n      color: white;\n      text-transform: none;\n      font-size: 100%;\n      height: auto;\n      width: auto;\n      padding: 5px 10px 5px 10px;\n      margin: 0px;\n    }\n    #waitWhat label {\n      display: inline;\n    }\n  ";
-  var style = document.createElement("style");
-  style.type = 'text/css';
-  if (style.styleSheet) {
-    style.styleSheet.cssText = css;
-  } else {
-    style.appendChild(document.createTextNode(css));
-  }
-  document.head.appendChild(style);
 
   var MainView = React.createClass({
     displayName: "MainView",
@@ -805,7 +795,17 @@ function startWaitWhat() {
 
   var newDiv = document.createElement("div");
   document.body.appendChild(newDiv);
-  ReactDOM.render(React.createElement(MainView, { rootEl: newDiv }), newDiv);
+
+  var iframeId = "myLilIframe-" + Math.round(Math.random() * 10000000000);
+  var iframe = React.createElement(
+    Frame,
+    {
+      id: iframeId,
+      css: contentCss },
+    React.createElement(MainView, { rootEl: newDiv })
+  );
+  addIframeStyles(iframeId);
+  ReactDOM.render(iframe, newDiv);
 }
 
 function CasperCodeGenerator() {
@@ -1022,6 +1022,27 @@ function intersperse(a, delim) {
     }
   }, _marked[0], this, [[4, 19, 23, 31], [24,, 26, 30]]);
 }
+
+// ----------------------------------------------------------------------------
+// Define styles of iframe and its contents
+
+// Adds iframe styles to the document's <head>
+function addIframeStyles(iframeId) {
+  var css = "#" + iframeId + " { " + iframeCss + " }";
+  // Add CSS
+  var style = document.createElement("style");
+  style.type = 'text/css';
+  if (style.styleSheet) {
+    style.styleSheet.cssText = css;
+  } else {
+    style.appendChild(document.createTextNode(css));
+  }
+  document.head.appendChild(style);
+}
+
+var iframeCss = "\n      padding: 5px;\n      position: absolute;\n      top: 20px;\n      left: 20px;\n      z-index: 9000000;\n      background: whitesmoke;\n      max-height: 100%;\n      max-width: 80%;\n      overflow: scroll;\n      border-radius: 15px;\n";
+
+var contentCss = "\n    #waitWhat {\n      background: whitesmoke;\n      font-size: 100%;\n      color: #333333;\n      font-family: 'open sans', sans-serif;\n      font-weight: normal;\n      box-shadow: 2px 2px 5px 0px rgba(0,0,0,0.75);\n    }\n    #waitWhat input {\n      font-size: 100%;\n      font-weight: initial;\n      border: 1px solid #d1d1d1;\n      padding: 7px 10px;\n    }\n    #waitWhat button {\n      border-radius: 5px;\n      background-color: #18aae7;\n      color: white;\n      text-transform: none;\n      font-size: 100%;\n      height: auto;\n      width: auto;\n      padding: 5px 10px 5px 10px;\n      margin: 0px;\n    }\n    #waitWhat label {\n      display: inline;\n    }\n  ";
 
 // ----------------------------------------------------------------------------
 // Script
